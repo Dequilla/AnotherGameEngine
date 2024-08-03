@@ -10,6 +10,7 @@ set(
     SRC_FILES
 
     "engine.cpp"
+    "utility/logging.cpp"
 )
 
 project(
