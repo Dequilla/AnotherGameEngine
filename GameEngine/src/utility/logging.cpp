@@ -3,6 +3,7 @@
 #include <iostream>
 #include <format>
 #include <chrono>
+#include <algorithm>
 
 namespace ge::log
 {
@@ -22,6 +23,33 @@ namespace ge::log
                 return "UNKNOWN";
         }
     }
+    
+    Severity severity_from_string(std::string severity)
+    {
+        std::transform(severity.begin(), severity.end(), severity.begin(), ::toupper);
+
+        if(severity == "STATUS")
+        {
+            return Severity::STATUS;
+        }
+        else if(severity == "WARNING")
+        {
+            return Severity::WARNING;
+        }
+        else if(severity == "ERROR")
+        {
+            return Severity::ERROR;
+        }
+        else if(severity == "CRITICAL")
+        {
+            return Severity::CRITICAL;
+        }
+        else
+        {
+            return Severity::UNKNOWN;
+        }
+
+    }
 
     Logger::Logger()
     {
@@ -37,6 +65,26 @@ namespace ge::log
             ) 
         );
     }
+        
+    void Logger::status(const std::string& category, const std::string& msg)
+    {
+        log(Severity::STATUS, category, msg);
+    }
+
+    void Logger::warning(const std::string& category, const std::string& msg)
+    {
+        log(Severity::WARNING, category, msg);
+    }
+
+    void Logger::error(const std::string& category, const std::string& msg)
+    {
+        log(Severity::ERROR, category, msg);
+    }
+
+    void Logger::critical(const std::string& category, const std::string& msg)
+    {
+        log(Severity::CRITICAL, category, msg);
+    }
 
     void Logger::flush()
     {
@@ -50,4 +98,7 @@ namespace ge::log
 
 }
 
-ge::log::Logger logger;
+namespace ge
+{
+    ge::log::Logger logger;
+}

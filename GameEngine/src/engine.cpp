@@ -4,6 +4,8 @@
 #include <stdexcept>
 #include <format>
 
+#include <utility/logging.hpp>
+
 namespace ge
 {
     bool initSDL()
@@ -21,11 +23,11 @@ namespace ge
                 std::string strError(SDL_GetError());
                 if(!strError.empty())
                 {
-                    std::cout << "ERROR: Init SDL2 => " << strError << std::endl;
+                    logger.error("initSDL", strError);
                 }
                 else
                 {
-                    std::cout << "ERROR: Init SDL2 => Unknown error." << std::endl;
+                    logger.error("initSDL", "Unknown error on SDL_InitSubSystem.");
                 }
 
                 return false;
@@ -74,6 +76,10 @@ namespace ge
 
     bool Engine::run()
     {
+
+        uint32_t accumilatorFlushLog = 0;
+        const uint32_t flushLogCount = 200;
+
         if(m_isRunning) return false; // already running
         
         m_isRunning = true;
@@ -81,6 +87,16 @@ namespace ge
         SDL_Event e;
         while( m_isRunning )
         {
+
+            accumilatorFlushLog += 1;
+            if(accumilatorFlushLog >= flushLogCount)
+            {
+                logger.status("Engine", "Flushing log.");
+
+                accumilatorFlushLog = 0;
+                logger.flush();
+            }
+
             while( SDL_PollEvent( &e ) != 0 )
             {
                 if( e.type == SDL_QUIT )

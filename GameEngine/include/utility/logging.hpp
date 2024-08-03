@@ -9,11 +9,15 @@ namespace ge::log
 {
     enum class Severity
     {
+        UNKNOWN,
         STATUS,
         WARNING,
         ERROR,
         CRITICAL
     };
+
+    std::string severity_to_string(Severity severity);
+    Severity severity_from_string(std::string severity);
 
     class Logger
     {
@@ -23,11 +27,19 @@ namespace ge::log
         Logger();
 
         void log(Severity severity, const std::string& category, const std::string& msg);
+        
+        void status(const std::string& category, const std::string& msg);
+        void warning(const std::string& category, const std::string& msg);
+        void error(const std::string& category, const std::string& msg);
+        void critical(const std::string& category, const std::string& msg);
 
         void flush();
     };
 }
 
-extern ge::log::Logger logger;
+namespace ge
+{
+    extern ge::log::Logger logger;
+}
 
 #endif
