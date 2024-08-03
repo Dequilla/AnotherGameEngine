@@ -9,7 +9,7 @@ set(INC_DIR "include")
 set(
     SRC_FILES
 
-    "lib.c"
+    "engine.cpp"
 )
 
 project(
@@ -65,6 +65,12 @@ else()
     message(FATAL_ERROR "ERROR - ${PROJ_NAME}: PROJ_TYPE in CMakeLists.txt wrongly set. Supported types are EXECUTABLE or LIBRARY.")
 endif()
 
+# if(TARGET SDL2::SDL2main)
+#     message(STATUS "STATUS - SDL2main found. Using.")
+#     target_link_libraries(${PROJ_NAME} PUBLIC SDL2::SDL2main)
+# endif()
+
+target_link_libraries(${PROJ_NAME} PUBLIC SDL2::SDL2)
 target_include_directories(${PROJ_NAME} PUBLIC ${INC_DIR})
 
 if(${CMAKE_BUILD_TYPE} STREQUAL Debug)

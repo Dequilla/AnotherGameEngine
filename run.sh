@@ -2,4 +2,4 @@
 
 ./build.sh
 
-./build/debug/ExecutableName
+./build/Game/Game

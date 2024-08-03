@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.22)
 add_subdirectory(dependencies)
 
 add_subdirectory(GameEngine)
-message(STATUS "STATUS - Lib: Built as '${Library_LIB} with includes at '${Library_INCLUDE}'")
+message(STATUS "STATUS - Lib: Built as '${GameEngine_LIB} with includes at '${GameEnding_INCLUDE}'")
 
 set(
     GLOBAL_LIB 
