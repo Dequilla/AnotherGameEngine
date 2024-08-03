@@ -93,6 +93,8 @@ namespace ge::log
             std::cout << msg << "\n";
         }
 
+        m_buffer.clear();
+
         std::cout << std::flush;
     }
 

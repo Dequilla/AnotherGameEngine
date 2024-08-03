@@ -3,6 +3,7 @@
 #include <iostream>
 #include <stdexcept>
 #include <format>
+#include <chrono>
 
 #include <utility/logging.hpp>
 
@@ -76,24 +77,27 @@ namespace ge
 
     bool Engine::run()
     {
-
+        if(m_isRunning) return false; // already running
+                                      
         uint32_t accumilatorFlushLog = 0;
         const uint32_t flushLogCount = 200;
-
-        if(m_isRunning) return false; // already running
         
         m_isRunning = true;
 
+        std::chrono::time_point<std::chrono::high_resolution_clock> currentFrameTime, lastFrameTime;
         SDL_Event e;
         while( m_isRunning )
         {
+            currentFrameTime = std::chrono::high_resolution_clock::now();
+            std::chrono::duration<double> deltaTime = currentFrameTime - lastFrameTime;
+            lastFrameTime = currentFrameTime;
 
+            // TODO: Change to time based
             accumilatorFlushLog += 1;
             if(accumilatorFlushLog >= flushLogCount)
             {
-                logger.status("Engine", "Flushing log.");
-
                 accumilatorFlushLog = 0;
+                logger.status("Engine", std::format("Current frame time: {}.", deltaTime.count()));
                 logger.flush();
             }
 
