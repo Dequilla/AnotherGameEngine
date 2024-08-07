@@ -79,24 +79,23 @@ namespace ge
     {
         if(m_isRunning) return false; // already running
                                       
-        uint32_t accumilatorFlushLog = 0;
-        const uint32_t flushLogCount = 200;
-        
         m_isRunning = true;
 
         std::chrono::time_point<std::chrono::high_resolution_clock> currentFrameTime, lastFrameTime;
+        double accumilatedTime = 0.0;
         SDL_Event e;
         while( m_isRunning )
         {
             currentFrameTime = std::chrono::high_resolution_clock::now();
-            std::chrono::duration<double> deltaTime = currentFrameTime - lastFrameTime;
+            std::chrono::duration<double, std::chrono::seconds::period> deltaTime = currentFrameTime - lastFrameTime;
             lastFrameTime = currentFrameTime;
+            accumilatedTime = accumilatedTime + deltaTime.count();
 
             // TODO: Change to time based
-            accumilatorFlushLog += 1;
-            if(accumilatorFlushLog >= flushLogCount)
+            if( accumilatedTime >= 5 )
             {
-                accumilatorFlushLog = 0;
+                std::cout << "Accumilated time: " << accumilatedTime << " => DeltaTime: " << deltaTime.count() << std::endl;
+                accumilatedTime = 0.0;
                 logger.status("Engine", std::format("Current frame time: {}.", deltaTime.count()));
                 logger.flush();
             }
