@@ -20,7 +20,7 @@ namespace ge::vulkan
         return vkExtensions;
     }
 
-    bool extension_available(const std::string& extensionName, std::optional<uint32_t> optVersion = std::nullopt)
+    bool is_extension_available(const std::string& extensionName, std::optional<uint32_t> optVersion = std::nullopt)
     {
         // TODO: Potentially check case insensetive
         const static std::vector<VkExtensionProperties> AV_EXTENSIONS = get_available_extensions();
@@ -51,6 +51,32 @@ namespace ge::vulkan
 
     void create_instance(SDL_Window* window, VkInstance& vkInstance)
     {
+        uint32_t sdlExtensionCount = 0;
+        assert( SDL_Vulkan_GetInstanceExtensions(window, &sdlExtensionCount, NULL) );
+        std::vector<char*> reqSdlExt(sdlExtensionCount);
+        assert( SDL_Vulkan_GetInstanceExtensions(window, &sdlExtensionCount, const_cast<const char**>( reqSdlExt.data() ) ) );
+
+        uint32_t countAvailable = 0;
+        for( const auto& ext : reqSdlExt )
+        {
+            bool isAvailable = is_extension_available(ext);
+            if(isAvailable)
+            {
+                countAvailable += 1;
+            }
+
+            std::cout << "SDL Ext: " << ext << " available \"" << (isAvailable ? "true" : "false") << "\""  << std::endl;
+        }
+
+        if( countAvailable >= sdlExtensionCount )
+        {
+            std::cout << "SDL Vulkan required extensions was all available!" << std::endl;
+        }
+        else
+        {
+            std::cout << "SDL Vulkan required extensions not all available." << std::endl;
+        }
+
         VkApplicationInfo appInfo{};
         appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
         appInfo.pApplicationName = "Hello Triangle";
@@ -62,17 +88,6 @@ namespace ge::vulkan
         VkInstanceCreateInfo createInfo{};
         createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
         createInfo.pApplicationInfo = &appInfo;
-    
-        uint32_t sdlExtensionCount = 0;
-        assert( SDL_Vulkan_GetInstanceExtensions(window, &sdlExtensionCount, NULL) );
-        std::vector<char*> reqSdlExt(sdlExtensionCount);
-        assert( SDL_Vulkan_GetInstanceExtensions(window, &sdlExtensionCount, const_cast<const char**>( reqSdlExt.data() ) ) );
-
-        for( const auto& ext : reqSdlExt )
-        {
-            std::cout << "SDL Ext: " << ext << " is avaiable \"" << (extension_available(ext) ? "true" : "false") << "\""  << std::endl;
-
-        }
     
         createInfo.enabledExtensionCount = sdlExtensionCount;
         createInfo.ppEnabledExtensionNames = (const char**)reqSdlExt.data();
