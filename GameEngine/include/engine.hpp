@@ -5,6 +5,8 @@
 #include <string>
 
 #include <SDL2/SDL.h>
+#include <vulkan/vulkan_core.h>
+
 #include <utility/vec2.hpp>
 
 namespace ge
@@ -13,7 +15,7 @@ namespace ge
     class Engine 
     {
         SDL_Window* m_sdlWindow = nullptr;
-        SDL_GLContext m_sdlGLContext;
+        VkInstance m_vkInstance;
 
         bool m_isRunning = false;
 

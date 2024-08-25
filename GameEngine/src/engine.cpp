@@ -6,6 +6,7 @@
 #include <chrono>
 
 #include <utility/logging.hpp>
+#include <vulkan/vulkan.hpp>
 
 namespace ge
 {
@@ -42,14 +43,11 @@ namespace ge
     {
         initSDL();
 
-        SDL_GL_SetAttribute( SDL_GL_CONTEXT_MAJOR_VERSION, 4 );
-        SDL_GL_SetAttribute( SDL_GL_CONTEXT_MINOR_VERSION, 6 );
-
         m_sdlWindow = SDL_CreateWindow( 
             title.c_str(), 
             SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 
             resolution.x, resolution.y, 
-            SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN
+            SDL_WINDOW_VULKAN | SDL_WINDOW_SHOWN
         );
 
         if(!m_sdlWindow)
@@ -57,17 +55,13 @@ namespace ge
             throw std::runtime_error( std::format("ERROR: SDL Create Window => {}", SDL_GetError()) );
         }
 
-        m_sdlGLContext = SDL_GL_CreateContext( m_sdlWindow ); 
-        if( m_sdlGLContext == NULL )
-        {
-            throw std::runtime_error( std::format("ERROR: SDL GL Create Context => {}", SDL_GetError()) );
-        }
+        ge::vulkan::create_instance(m_sdlWindow, m_vkInstance);
+
     }
 
     Engine::~Engine()
     {
-        SDL_GL_DeleteContext(m_sdlGLContext);
-        m_sdlGLContext = NULL;
+        vkDestroyInstance(m_vkInstance, nullptr);
 
         SDL_DestroyWindow(m_sdlWindow);
         m_sdlWindow = nullptr;

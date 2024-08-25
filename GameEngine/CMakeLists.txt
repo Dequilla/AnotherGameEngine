@@ -71,7 +71,10 @@ endif()
 #     target_link_libraries(${PROJ_NAME} PUBLIC SDL2::SDL2main)
 # endif()
 
-target_link_libraries(${PROJ_NAME} PUBLIC SDL2::SDL2)
+find_package(Vulkan REQUIRED)
+find_package(glm REQUIRED)
+
+target_link_libraries(${PROJ_NAME} PUBLIC SDL2::SDL2 Vulkan::Vulkan glm::glm)
 target_include_directories(${PROJ_NAME} PUBLIC ${INC_DIR})
 
 if(${CMAKE_BUILD_TYPE} STREQUAL Debug)
