@@ -56,6 +56,21 @@ namespace ge::vulkan
         return true;
     }
 
+    std::vector<const char*> get_required_extensions(SDL_Window* window)
+    {
+        uint32_t sdlExtensionCount = 0;
+        assert( SDL_Vulkan_GetInstanceExtensions(window, &sdlExtensionCount, NULL) );
+        std::vector<const char*> requiredExtensions(sdlExtensionCount);
+        assert( SDL_Vulkan_GetInstanceExtensions(window, &sdlExtensionCount, requiredExtensions.data() ) );
+        
+        if( ENABLE_VALIDATION_LAYERS )
+        {
+            requiredExtensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME); // Extension for VK_EXT_debug_utils
+        }
+       
+        return requiredExtensions;
+    }
+
     std::vector<VkExtensionProperties> get_available_extensions()
     {
         uint32_t count = 0;
@@ -104,13 +119,9 @@ namespace ge::vulkan
             return false;
         }
 
-        uint32_t sdlExtensionCount = 0;
-        assert( SDL_Vulkan_GetInstanceExtensions(window, &sdlExtensionCount, NULL) );
-        std::vector<char*> reqSdlExt(sdlExtensionCount);
-        assert( SDL_Vulkan_GetInstanceExtensions(window, &sdlExtensionCount, const_cast<const char**>( reqSdlExt.data() ) ) );
-
+        std::vector<const char*> requiredExtensions = get_required_extensions(window);
         uint32_t countAvailable = 0;
-        for( const auto& ext : reqSdlExt )
+        for( const auto& ext : requiredExtensions)
         {
             bool isAvailable = is_extension_available(ext);
             if(isAvailable)
@@ -118,16 +129,16 @@ namespace ge::vulkan
                 countAvailable += 1;
             }
 
-            logger.status("Vulkan", std::format("SDL required Vulkan extension: \"{}\" available \"{}\"", ext, (isAvailable ? "true" : "false")));
+            logger.status("Vulkan", std::format("Required Vulkan extension: \"{}\" available \"{}\"", ext, (isAvailable ? "true" : "false")));
         }
 
-        if( countAvailable >= sdlExtensionCount )
+        if( countAvailable >= requiredExtensions.size() )
         {
-            logger.status("Vulkan", "SDL Vulkan required extensions was all available!");
+            logger.status("Vulkan", "Vulkan required extensions was all available!");
         }
         else
         {
-            logger.error("Vulkan", "SDL Vulkan required extensions not all available.");
+            logger.error("Vulkan", "Vulkan required extensions not all available.");
             return false;
         }
 
@@ -143,8 +154,8 @@ namespace ge::vulkan
         createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
         createInfo.pApplicationInfo = &appInfo;
     
-        createInfo.enabledExtensionCount = sdlExtensionCount;
-        createInfo.ppEnabledExtensionNames = (const char**)reqSdlExt.data();
+        createInfo.enabledExtensionCount = static_cast<uint32_t>( requiredExtensions.size() );
+        createInfo.ppEnabledExtensionNames = (const char**)requiredExtensions.data();
 
         if( ENABLE_VALIDATION_LAYERS )
         {
