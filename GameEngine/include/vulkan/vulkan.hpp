@@ -1,5 +1,7 @@
 #ifndef GE_VULKAN_HPP
 
+#include <utility/logging.hpp>
+
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_vulkan.h>
 #include <vulkan/vulkan.h>
@@ -9,6 +11,51 @@
 
 namespace ge::vulkan
 {
+    
+    const std::vector<const char*> VALIDATION_LAYERS = {
+        "VK_LAYER_KHRONOS_validation"
+    };
+
+    #ifdef _DEBUG
+        const bool ENABLE_VALIDATION_LAYERS = true;
+    #else
+        const bool ENABLE_VALIDATION_LAYERS = false;
+    #endif
+
+    bool check_validation_layer_support()
+    {
+        uint32_t layerCount;
+        vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
+
+        std::vector<VkLayerProperties> availableLayers(layerCount);
+        vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data());
+
+        for (const char* validationLayer : VALIDATION_LAYERS) 
+        {
+            bool layerFound = false;
+        
+            for (const auto& layerProperties : availableLayers) 
+            {
+                if (strcmp(validationLayer, layerProperties.layerName) == 0) 
+                {
+                    logger.status("Vulkan", std::format("Validation layer \"{}\" supported.", validationLayer));
+                    layerFound = true;
+                    break;
+                }
+            }
+        
+            if (!layerFound)
+            {
+                logger.error("Vulkan", std::format("Validation layer \"{}\" not supported.", validationLayer));
+                return false;
+            }
+        }
+
+        logger.status("Vulkan", "Needed validation layers are supported.");
+
+        return true;
+    }
+
     std::vector<VkExtensionProperties> get_available_extensions()
     {
         uint32_t count = 0;
@@ -49,8 +96,14 @@ namespace ge::vulkan
         return false;
     }
 
-    void create_instance(SDL_Window* window, VkInstance& vkInstance)
+    bool create_instance(SDL_Window* window, VkInstance& vkInstance)
     {
+        if( ENABLE_VALIDATION_LAYERS && !check_validation_layer_support() )
+        {
+            logger.error("Vulkan", "Validation layers enabled but not supported."); 
+            return false;
+        }
+
         uint32_t sdlExtensionCount = 0;
         assert( SDL_Vulkan_GetInstanceExtensions(window, &sdlExtensionCount, NULL) );
         std::vector<char*> reqSdlExt(sdlExtensionCount);
@@ -65,16 +118,17 @@ namespace ge::vulkan
                 countAvailable += 1;
             }
 
-            std::cout << "SDL Ext: " << ext << " available \"" << (isAvailable ? "true" : "false") << "\""  << std::endl;
+            logger.status("Vulkan", std::format("SDL required Vulkan extension: \"{}\" available \"{}\"", ext, (isAvailable ? "true" : "false")));
         }
 
         if( countAvailable >= sdlExtensionCount )
         {
-            std::cout << "SDL Vulkan required extensions was all available!" << std::endl;
+            logger.status("Vulkan", "SDL Vulkan required extensions was all available!");
         }
         else
         {
-            std::cout << "SDL Vulkan required extensions not all available." << std::endl;
+            logger.error("Vulkan", "SDL Vulkan required extensions not all available.");
+            return false;
         }
 
         VkApplicationInfo appInfo{};
@@ -91,10 +145,21 @@ namespace ge::vulkan
     
         createInfo.enabledExtensionCount = sdlExtensionCount;
         createInfo.ppEnabledExtensionNames = (const char**)reqSdlExt.data();
-        createInfo.enabledLayerCount = 0;
+
+        if( ENABLE_VALIDATION_LAYERS )
+        {
+            createInfo.enabledLayerCount = static_cast<uint32_t>( VALIDATION_LAYERS.size() );
+            createInfo.ppEnabledLayerNames = VALIDATION_LAYERS.data();
+        }
+        else
+        {
+            createInfo.enabledLayerCount = 0;
+        }
     
         VkResult vkResult = vkCreateInstance(&createInfo, nullptr, &vkInstance);
         assert( vkResult == VK_SUCCESS );
+
+        return true;
     }
 
 }

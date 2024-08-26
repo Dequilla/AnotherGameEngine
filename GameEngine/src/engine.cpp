@@ -55,8 +55,7 @@ namespace ge
             throw std::runtime_error( std::format("ERROR: SDL Create Window => {}", SDL_GetError()) );
         }
 
-        ge::vulkan::create_instance(m_sdlWindow, m_vkInstance);
-
+        assert( true == ge::vulkan::create_instance(m_sdlWindow, m_vkInstance) );
     }
 
     Engine::~Engine()
@@ -77,6 +76,7 @@ namespace ge
 
         std::chrono::time_point<std::chrono::high_resolution_clock> currentFrameTime, lastFrameTime;
         double accumilatedTime = 0.0;
+        uint64_t accumilatedFrames = 0;
         SDL_Event e;
         while( m_isRunning )
         {
@@ -84,13 +84,12 @@ namespace ge
             std::chrono::duration<double, std::chrono::seconds::period> deltaTime = currentFrameTime - lastFrameTime;
             lastFrameTime = currentFrameTime;
             accumilatedTime = accumilatedTime + deltaTime.count();
+            accumilatedFrames += 1;
 
-            // TODO: Change to time based
             if( accumilatedTime >= 5 )
             {
-                std::cout << "Accumilated time: " << accumilatedTime << " => DeltaTime: " << deltaTime.count() << std::endl;
                 accumilatedTime = 0.0;
-                logger.status("Engine", std::format("Current frame time: {}.", deltaTime.count()));
+                logger.status("Engine", std::format("Current frame time: \"{}\" estimated FPS: \"{}\".", deltaTime.count(), accumilatedFrames / 5));
                 logger.flush();
             }
 
@@ -105,7 +104,7 @@ namespace ge
             // TODO: Game Update (physics, logic etc)
             // TODO: Render Update (rendering)
 
-            SDL_GL_SwapWindow( m_sdlWindow );
+            // TODO: Swap window vulkan(swap chain)
         }
 
         return true;
